@@ -1,40 +1,23 @@
-name: Process Uploaded Image
+name: Auto Commit Images
 
 on:
-  repository_dispatch:
-    types: [upload_image]
+  push:
+    paths:
+      - 'images/**'  # 监控images目录变化
+  workflow_dispatch:
 
 jobs:
-  process-image:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取完整历史记录
-        
-      - name: Get workflow payload
-        id: payload
+          persist-credentials: true  # 关键！使用Actions自带权限
+
+      - name: Add new images
         run: |
-          echo "PAYLOAD=$(jq -r '.client_payload' <<< '${{ toJson(github.event.client_payload) }}')" >> $GITHUB_OUTPUT
-        
-      - name: Setup environment
-        run: |
-          mkdir -p uploads
-          echo "RELATIVE_PATH=$(echo '${{ steps.payload.outputs.PAYLOAD }}' | jq -r '.relative_path')" >> $GITHUB_ENV
-          echo "TEMP_FILE_PATH=$(echo '${{ steps.payload.outputs.PAYLOAD }}' | jq -r '.temp_file_path')" >> $GITHUB_ENV
-        
-      - name: Download image from server
-        if: env.TEMP_FILE_PATH != 'null'
-        run: |
-          # 这里假设你的服务器可以通过SSH访问
-          # 实际使用时需要替换为你的文件下载逻辑
-          scp your-server:$TEMP_FILE_PATH ./$RELATIVE_PATH
-        
-      - name: Commit and push image
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add $RELATIVE_PATH
-          git commit -m "Add uploaded image: $RELATIVE_PATH"
+          git config --global user.name "amazingname91"
+          git config --global user.email "1610287343@qq.com"
+          git add .
+          git commit -m "Auto-add images" || echo "No changes"
           git push
